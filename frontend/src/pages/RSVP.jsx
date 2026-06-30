@@ -12,6 +12,9 @@ export default function CreateEvent() {
 
   const [success, setSuccess] = useState(false);
 
+  // RSVP link state
+  const [rsvpLink, setRsvpLink] = useState("");
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -26,38 +29,61 @@ export default function CreateEvent() {
     });
 
     if (response.ok) {
+      const data = await response.json();
+
+      // Build RSVP link using event_code returned from backend
+      setRsvpLink(`http://localhost:5173/rsvp/${data.event_code}`);
+
       setSuccess(true);
     }
   };
 
+  //  SUCCESS SCREEN
   if (success) {
-  return (
-    <div className="success-screen">
-      <h2>🎉 Event Successfully Created!</h2>
-      <p>Your event has been saved.</p>
+    return (
+      <div className="success-screen">
+        <h2>🎉 Event Successfully Created!</h2>
+        <p>Your event has been saved.</p>
 
-      <p><strong>Tables Registered:</strong> {form.table_count}</p>
-      <p><strong>Table Shape:</strong> {form.table_shape}</p>
+        <p><strong>Tables Registered:</strong> {form.table_count}</p>
+        <p><strong>Table Shape:</strong> {form.table_shape}</p>
 
-      {/* ⭐ RSVP Link Section */}
-      <div className="rsvp-section" style={{ marginTop: "20px" }}>
-        <p><strong>RSVP Link:</strong></p>
+        {/*  RSVP Link Section */}
+        <div className="rsvp-section" style={{ marginTop: "20px" }}>
+          <p><strong>RSVP Link:</strong></p>
 
-        <input
-          value={rsvpLink}
-          readOnly
-          style={{
-            width: "100%",
-            padding: "10px",
-            borderRadius: "8px",
-            border: "1px solid #ccc",
-            marginBottom: "10px"
-          }}
-        />
+          <input
+            value={rsvpLink}
+            readOnly
+            style={{
+              width: "100%",
+              padding: "10px",
+              borderRadius: "8px",
+              border: "1px solid #ccc",
+              marginBottom: "10px"
+            }}
+          />
 
+          <button
+            onClick={() => navigator.clipboard.writeText(rsvpLink)}
+            style={{
+              padding: "10px 20px",
+              borderRadius: "8px",
+              backgroundColor: "#6a5acd",
+              color: "white",
+              border: "none",
+              cursor: "pointer"
+            }}
+          >
+            Copy RSVP Link
+          </button>
+        </div>
+
+        {/*  Start ArrangeMe Button */}
         <button
-          onClick={() => navigator.clipboard.writeText(rsvpLink)}
+          onClick={() => window.location.href = "/"}
           style={{
+            marginTop: "20px",
             padding: "10px 20px",
             borderRadius: "8px",
             backgroundColor: "#6a5acd",
@@ -66,28 +92,13 @@ export default function CreateEvent() {
             cursor: "pointer"
           }}
         >
-          Copy RSVP Link
+          Start ArrangeMe
         </button>
       </div>
+    );
+  }
 
-      <button
-        onClick={() => window.location.href = "/events"}
-        style={{
-          marginTop: "20px",
-          padding: "10px 20px",
-          borderRadius: "8px",
-          backgroundColor: "#6a5acd",
-          color: "white",
-          border: "none",
-          cursor: "pointer"
-        }}
-      >
-        Start ArrangeMe
-      </button>
-    </div>
-  );
-}
-
+  //  EVENT CREATION FORM
   return (
     <div className="create-event-container">
       <h2>Create Event</h2>

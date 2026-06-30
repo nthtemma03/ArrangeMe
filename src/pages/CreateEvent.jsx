@@ -10,20 +10,20 @@ export default function CreateEvent() {
   });
 
   const handleChange = (e) => {
+    if (!e || !e.target) return;
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const response = await fetch("http://localhost:8000/events", {
+    const response = await fetch("http://localhost:8001/events", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form)
     });
 
     const data = await response.json();
-    console.log("Event created:", data);
     alert("Event created successfully!");
   };
 

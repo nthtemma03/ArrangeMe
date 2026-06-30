@@ -1,9 +1,21 @@
-import express from 'express';
-import { getEvents, createEvent } from '../controllers/eventControl.js';
+import express from "express";
+import {
+  createEvent,
+  getEvents,
+  updateEvent,
+  deleteEvent,
+  getEventByCode,
+  submitRSVP
+} from "../controllers/eventControl.js";
 
 const router = express.Router();
 
-router.get('/', getEvents);
-router.post('/', createEvent);
+router.post("/events", createEvent);
+router.get("/events", getEvents);
+router.get("/events/:event_code", getEventByCode);
+router.put("/events/:eventId", updateEvent);
+router.delete("/events/:eventId", deleteEvent);
+
+router.post("/rsvp/:event_code", submitRSVP);
 
 export default router;

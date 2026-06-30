@@ -5,7 +5,7 @@ services:
     build: ./backend
     container_name: arrangeme-backend
     ports:
-      - "8000:8000"
+      - "8001:8000"
     environment:
       DATABASE_URL: postgres://postgres:password@db:5432/arrangeme
     depends_on:
