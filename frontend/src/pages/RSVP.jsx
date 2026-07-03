@@ -1,159 +1,70 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 
-export default function CreateEvent() {
-  const [form, setForm] = useState({
-    name: "",
-    event_date: "",
-    event_time: "",
-    guest_count: "",
-    table_count: "",
-    table_shape: ""
-  });
+export default function RSVPPage() {
+  const { event_code } = useParams();
+  const [event, setEvent] = useState(null);
+  const [form, setForm] = useState({ guest_name: "", relationship: "", phone: "" });
+  const [message, setMessage] = useState("");
 
-  const [success, setSuccess] = useState(false);
+  useEffect(() => {
+    const fetchEvent = async () => {
+      try {
+        const res = await fetch(`http://localhost:8001/api/events/${event_code}`);
+        const data = await res.json();
+        if (res.ok) setEvent(data.event);
+      } catch (err) {
+        console.error(err);
+      }
+    };
 
-  // RSVP link state
-  const [rsvpLink, setRsvpLink] = useState("");
+    if (event_code) fetchEvent();
+  }, [event_code]);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const response = await fetch("http://localhost:8000/events", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form)
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-
-      // Build RSVP link using event_code returned from backend
-      setRsvpLink(`http://localhost:5173/rsvp/${data.event_code}`);
-
-      setSuccess(true);
+    setMessage("");
+    try {
+      const res = await fetch(`http://localhost:8001/api/rsvp/${event_code}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMessage(data.message || "RSVP submitted — thank you!");
+        setForm({ guest_name: "", relationship: "", phone: "" });
+      } else {
+        setMessage(data.message || "Failed to submit RSVP.");
+      }
+    } catch (err) {
+      setMessage("Unable to submit RSVP right now.");
     }
   };
 
-  //  SUCCESS SCREEN
-  if (success) {
-    return (
-      <div className="success-screen">
-        <h2>🎉 Event Successfully Created!</h2>
-        <p>Your event has been saved.</p>
-
-        <p><strong>Tables Registered:</strong> {form.table_count}</p>
-        <p><strong>Table Shape:</strong> {form.table_shape}</p>
-
-        {/*  RSVP Link Section */}
-        <div className="rsvp-section" style={{ marginTop: "20px" }}>
-          <p><strong>RSVP Link:</strong></p>
-
-          <input
-            value={rsvpLink}
-            readOnly
-            style={{
-              width: "100%",
-              padding: "10px",
-              borderRadius: "8px",
-              border: "1px solid #ccc",
-              marginBottom: "10px"
-            }}
-          />
-
-          <button
-            onClick={() => navigator.clipboard.writeText(rsvpLink)}
-            style={{
-              padding: "10px 20px",
-              borderRadius: "8px",
-              backgroundColor: "#6a5acd",
-              color: "white",
-              border: "none",
-              cursor: "pointer"
-            }}
-          >
-            Copy RSVP Link
-          </button>
-        </div>
-
-        {/*  Start ArrangeMe Button */}
-        <button
-          onClick={() => window.location.href = "/"}
-          style={{
-            marginTop: "20px",
-            padding: "10px 20px",
-            borderRadius: "8px",
-            backgroundColor: "#6a5acd",
-            color: "white",
-            border: "none",
-            cursor: "pointer"
-          }}
-        >
-          Start ArrangeMe
-        </button>
-      </div>
-    );
-  }
-
-  //  EVENT CREATION FORM
   return (
     <div className="create-event-container">
-      <h2>Create Event</h2>
+      <h2>Guest RSVP</h2>
+
+      {event ? (
+        <div style={{ marginBottom: "8px", color: "#666" }}>
+          <p style={{ margin: 0 }}><strong>{event.name}</strong></p>
+          <p style={{ margin: 0 }}>{event.event_date} {event.event_time}</p>
+        </div>
+      ) : (
+        <p style={{ color: "#666" }}>Loading event...</p>
+      )}
 
       <form onSubmit={handleSubmit}>
-        <input
-          name="name"
-          placeholder="Event Name"
-          value={form.name}
-          onChange={handleChange}
-        />
-
-        <input
-          type="date"
-          name="event_date"
-          value={form.event_date}
-          onChange={handleChange}
-        />
-
-        <input
-          type="time"
-          name="event_time"
-          value={form.event_time}
-          onChange={handleChange}
-        />
-
-        <input
-          type="number"
-          name="guest_count"
-          placeholder="Number of Guests"
-          value={form.guest_count}
-          onChange={handleChange}
-        />
-
-        <input
-          type="number"
-          name="table_count"
-          placeholder="Number of Tables"
-          value={form.table_count}
-          onChange={handleChange}
-        />
-
-        <select
-          name="table_shape"
-          value={form.table_shape}
-          onChange={handleChange}
-        >
-          <option value="">Select Table Shape</option>
-          <option value="round">Round</option>
-          <option value="square">Square</option>
-          <option value="rectangle">Rectangle</option>
-        </select>
-
-        <button type="submit">Create Event</button>
+        <input name="guest_name" placeholder="Your name" value={form.guest_name} onChange={handleChange} />
+        <input name="relationship" placeholder="Relationship to host" value={form.relationship} onChange={handleChange} />
+        <input name="phone" placeholder="Phone number" value={form.phone} onChange={handleChange} />
+        <button type="submit">Submit RSVP</button>
       </form>
+
+      {message && <p style={{ marginTop: "12px" }}>{message}</p>}
     </div>
   );
 }
